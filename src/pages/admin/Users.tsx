@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
 import api from "@/services/api";
 import { useForm } from "react-hook-form";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface User {
   id: string;
@@ -132,40 +140,49 @@ export default function Users() {
           ) : error ? (
             <div className="text-red-500">{error}</div>
           ) : (
-            <table className="min-w-full bg-white rounded shadow">
-              <thead>
-                <tr>
-                  <th className="py-2 px-4 border-b">Name</th>
-                  <th className="py-2 px-4 border-b">Email</th>
-                  <th className="py-2 px-4 border-b">Role</th>
-                  <th className="py-2 px-4 border-b">Projects</th>
-                  <th className="py-2 px-4 border-b">Created At</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table className="min-w-full bg-white rounded shadow">
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="py-2 px-4 border-b">Name</TableHead>
+                  <TableHead className="py-2 px-4 border-b">Email</TableHead>
+                  <TableHead className="py-2 px-4 border-b">Role</TableHead>
+                  <TableHead className="py-2 px-4 border-b">Projects</TableHead>
+                  <TableHead className="py-2 px-4 border-b">Created At</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {data.map((user) => (
-                  <tr key={user.id}>
-                    <td className="py-2 px-4 border-b">{user.name}</td>
-                    <td className="py-2 px-4 border-b">{user.email}</td>
-                    <td className="py-2 px-4 border-b">{user.role}</td>
-                    <td className="py-2 px-4 border-b">
-  {user.userProjects && user.userProjects.length > 0 ? (
-    <span className="bg-green-100 text-green-700 px-3 py-1 rounded text-sm font-semibold">
-      Assigned
-    </span>
-  ) : (
-    <span className="bg-red-100 text-red-700 px-3 py-1 rounded text-sm font-semibold">
-      Not Assigned
-    </span>
-  )}
-</td>
-                    <td className="py-2 px-4 border-b">
+                  <TableRow key={user.id}>
+                    <TableCell className="py-2 px-4 border-b">{user.name}</TableCell>
+                        {/* <TableCell className="flex items-center gap-2">
+//                     <Avatar className="h-8 w-8">
+//                       <AvatarImage src={u.avatarUrl} />
+//                       <AvatarFallback>
+//                         {(u.name || u.email).slice(0, 2).toUpperCase()}
+//                       </AvatarFallback>
+//                     </Avatar>
+//                     <span className="font-medium">{u.name || "—"}</span>
+//                   </TableCell> */}
+                    <TableCell className="py-2 px-4 border-b">{user.email}</TableCell>
+                    <TableCell className="py-2 px-4 border-b">{user.role}</TableCell>
+                    <TableCell className="py-2 px-4 border-b">
+                       {user.userProjects && user.userProjects.length > 0 ? (
+                          <span className="bg-green-100 text-green-700 px-3 py-1 rounded text-sm font-semibold">
+                             Assigned
+                          </span>
+                      ) : (
+                         <span className="bg-red-100 text-red-700 px-3 py-1 rounded text-sm font-semibold">
+                           Not Assigned
+                         </span>
+                       )}
+                    </TableCell>
+                    <TableCell className="py-2 px-4 border-b">
                       {new Date(user.createdAt).toLocaleDateString()}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           )}
         </div>
       ) : (
