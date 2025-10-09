@@ -18,6 +18,8 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       token: null,
       isLoading: false,
+      // Hydration effect: always reset isLoading to false on load
+      _hydrate: () => set({ isLoading: false }),
 
       login: async ({ email, password }) => {
         set({ isLoading: true });
@@ -30,9 +32,9 @@ export const useAuthStore = create<AuthState>()(
           console.log("Login response data:", data);
           set({ user: data.user, token: data.token, isLoading: false });
           return data.user;
-        } catch (e) {
+        } catch (e: any) {
           set({ isLoading: false });
-          console.error("Login error:", e);
+          console.error("Login error:", e.response?.data || e.message);
           throw e;
         }
       },
@@ -70,6 +72,11 @@ export const useAuthStore = create<AuthState>()(
         return !!u && roles.includes(u.role);
       },
     }),
-    { name: "auth-store" }
+    {
+      name: "auth-store",
+      onRehydrateStorage: () => (state) => {
+        state.isLoading = false;
+      },
+    }
   )
 );
