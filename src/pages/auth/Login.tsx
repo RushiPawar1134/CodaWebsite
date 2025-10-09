@@ -39,6 +39,7 @@ export default function Login() {
       const user = await login(data);
       if (user.role === "ADMIN") navigate("/admin");
       else navigate("/user/projects");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       alert(e?.response?.data?.message || "Login failed");
     }
@@ -115,7 +116,10 @@ export default function Login() {
               </Button>
               <FieldDescription className="text-center">
                 Don&apos;t have an account?{" "}
-                <Link to="/auth/register" className="underline underline-offset-4">
+                <Link
+                  to="/auth/register"
+                  className="underline underline-offset-4"
+                >
                   Sign up
                 </Link>
               </FieldDescription>
@@ -135,8 +139,6 @@ export default function Login() {
   );
 }
 
-
-
 // import { useNavigate, Link } from "react-router-dom";
 // import { useForm } from "react-hook-form";
 // import { z } from "zod";
@@ -152,7 +154,6 @@ export default function Login() {
 //   FieldLabel,
 //   FieldSeparator,
 // } from "@/components/ui/field";
-
 
 // const schema = z.object({
 //   email: z.string().email("Valid email required"),
