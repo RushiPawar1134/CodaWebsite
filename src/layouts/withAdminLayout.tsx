@@ -1,20 +1,41 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Separator } from '@/components/ui/separator';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import api from '@/services/api';
 
 export function withAdminLayout<P>(Component: React.ComponentType<P>) {
   const Wrapped: React.FC<P> = (props) => {
     const navigate = useNavigate();
+    const [admin, setAdmin] = useState<{ name: string; role: string } | null>(null);
 
-    // Example logout handler (clear token, etc.)
+    useEffect(() => {
+      api.get("/api/users/me")
+        .then(res => setAdmin(res.data))
+        .catch(() => setAdmin(null));
+    }, []);
+
     const handleSignOut = () => {
-      localStorage.removeItem("token"); // or your auth key
+      localStorage.removeItem("token");
       navigate("/login");
     };
 
     return (
       <div className="flex min-h-screen">
         <aside className="w-64 border-r bg-white p-4 flex flex-col">
+          <div className="flex flex-row items-center mb-6 gap-3">
+            <Avatar className="w-14 h-14 ">
+              <AvatarFallback>
+                {admin?.name ? admin.name[0].toUpperCase() : "A"}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+            <div className="font-semibold">{admin?.name || "Admin"}</div>
+            <div className="text-xs text-purple-600 font-medium mt-1">
+              {admin?.role === "ADMIN" ? "SUPER ADMIN" : admin?.role || ""}
+              </div>
+            </div>
+          </div>
           <h2 className="font-bold text-lg">Admin Panel</h2>
           <Separator className="my-3" />
           <nav className="space-y-4 flex-1">
@@ -64,41 +85,3 @@ export function withAdminLayout<P>(Component: React.ComponentType<P>) {
   };
   return Wrapped;
 }
-
-
-// import React from 'react';
-// import { NavLink } from 'react-router-dom';
-// import { Separator } from '@/components/ui/separator';
-
-// export function withAdminLayout<P>(Component: React.ComponentType<P>) {
-//   const Wrapped: React.FC<P> = (props) => (
-//     <div className="flex min-h-screen">
-//       <aside className="w-64 border-r bg-white p-4">
-//         <h2 className="font-bold text-lg">Admin Panel</h2>
-//         <Separator className="my-3" />
-//         <nav className="space-y-2">
-//           <NavLink
-//             to="/admin/users"
-//             className={({ isActive }) =>
-//               `block rounded px-3 py-2 ${isActive ? 'bg-gray-100 font-medium' : 'hover:bg-gray-50'}`
-//             }
-//           >
-//             Users
-//           </NavLink>
-//           <NavLink
-//             to="/admin/projects"
-//             className={({ isActive }) =>
-//               `block rounded px-3 py-2 ${isActive ? 'bg-gray-100 font-medium' : 'hover:bg-gray-50'}`
-//             }
-//           >
-//             Projects
-//           </NavLink>
-//         </nav>
-//       </aside>
-//       <main className="flex-1 p-6 bg-gray-50">
-//         <Component {...(props as P)} />
-//       </main>
-//     </div>
-//   );
-//   return Wrapped;
-// }
