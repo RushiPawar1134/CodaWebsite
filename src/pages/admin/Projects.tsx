@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import api from "@/services/api";
-import { Card, CardContent, CardHeader, CardTitle, } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface Project {
   id: string;
@@ -29,12 +29,12 @@ function ProjectList() {
       });
   }, []);
 
-  if (loading) return <div className="p-8 text-center">Loading projects...</div>;
+  if (loading)
+    return <div className="p-8 text-center">Loading projects...</div>;
   if (error) return <div className="p-8 text-center text-red-500">{error}</div>;
 
   return (
-    
- <div>
+    <div>
       <h1 className="text-2xl font-bold mb-6">Your Projects</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {projects.map((project) => (
@@ -63,7 +63,6 @@ function ProjectList() {
         ))}
       </div>
     </div>
-
   );
 }
 
