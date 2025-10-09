@@ -32,6 +32,7 @@ export const useAuthStore = create<AuthState>()(
           console.log("Login response data:", data);
           set({ user: data.user, token: data.token, isLoading: false });
           return data.user;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (e: any) {
           set({ isLoading: false });
           console.error("Login error:", e.response?.data || e.message);
