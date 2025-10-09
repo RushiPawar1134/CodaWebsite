@@ -2,6 +2,15 @@ import { useEffect, useState } from "react";
 import api from "@/services/api";
 import { useForm } from "react-hook-form";
 import {
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel, // ✅ NEW
+  flexRender,
+} from "@tanstack/react-table";
+import type { SortingState, ColumnDef } from "@tanstack/react-table"; // ✅ correct import
+import {
   Table,
   TableBody,
   TableCell,
@@ -9,6 +18,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input"; // ✅ for search box
 
 interface User {
   id: string;
@@ -16,6 +28,8 @@ interface User {
   name: string;
   role: "USER" | "ADMIN";
   createdAt: string;
+  avatarUrl?: string;
+  userProjects?: any[];
 }
 
 interface CreateUserForm {
@@ -26,7 +40,7 @@ interface CreateUserForm {
   userProjects: any[];
 }
 
-function CreateUser({ onCreated }: { onCreated: () => void }) {
+export function CreateUser({ onCreated }: { onCreated: () => void }) {
   const { register, handleSubmit, reset } = useForm<CreateUserForm>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -69,13 +83,15 @@ function CreateUser({ onCreated }: { onCreated: () => void }) {
           <option value="USER">User</option>
           <option value="ADMIN">Admin</option>
         </select>
-        <button
+
+        <Button
           type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded"
           disabled={loading}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white"
         >
           {loading ? "Creating..." : "Create User"}
-        </button>
+        </Button>
+
         {error && <div className="text-red-500">{error}</div>}
       </form>
     </div>
@@ -87,6 +103,8 @@ export default function Users() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"list" | "create">("list");
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [globalFilter, setGlobalFilter] = useState(""); // ✅ NEW
 
   useEffect(() => {
     api
@@ -98,9 +116,81 @@ export default function Users() {
       })
       .catch((err) => {
         setError(err?.response?.data?.message || "Failed to load users");
-        setLoading(false);
+        api
+          .get("/api/admin/users")
+          .then((res) => {
+            const items = Array.isArray(res.data.items)
+              ? res.data.items
+              : res.data;
+            setData(items);
+            setLoading(false);
+          })
+          .catch((err) => {
+            setError(err?.response?.data?.message || "Failed to load users");
+            setLoading(false);
+          });
       });
   }, []);
+
+  const columns: ColumnDef<User>[] = [
+    {
+      accessorKey: "name",
+      header: "Name",
+      cell: ({ row }) => {
+        const user = row.original;
+        return (
+          <div className="flex items-center gap-3">
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={user.avatarUrl} />
+              <AvatarFallback>
+                {(user.name || user.email)?.slice(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <span className="font-medium">{user.name}</span>
+          </div>
+        );
+      },
+    },
+    { accessorKey: "email", header: "Email" },
+    { accessorKey: "role", header: "Role" },
+    {
+      accessorKey: "userProjects",
+      header: "Projects",
+      cell: ({ row }) => {
+        const user = row.original;
+        return user.userProjects && user.userProjects.length > 0 ? (
+          <span className="bg-green-100 text-green-700 px-3 py-1 rounded text-sm font-semibold">
+            Assigned
+          </span>
+        ) : (
+          <span className="bg-red-100 text-red-700 px-3 py-1 rounded text-sm font-semibold">
+            Not Assigned
+          </span>
+        );
+      },
+    },
+    {
+      accessorKey: "createdAt",
+      header: "Created At",
+      cell: ({ getValue }) => {
+        const date = new Date(getValue() as string);
+        return date.toLocaleDateString();
+      },
+    },
+  ];
+
+  // ✅ Table instance with pagination enabled
+  const table = useReactTable({
+    data,
+    columns,
+    state: { sorting, globalFilter },
+    onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(), // ✅ pagination
+  });
 
   const handleUserCreated = () => {
     setActiveTab("list");
@@ -115,74 +205,106 @@ export default function Users() {
   return (
     <div className="space-y-4">
       <div className="flex gap-4 mb-4">
-        <button
-          className={`py-2 px-4 rounded font-semibold ${
-            activeTab === "list" ? "bg-gray-200" : ""
-          }`}
+        <Button
+          variant={activeTab === "list" ? "secondary" : "outline"}
           onClick={() => setActiveTab("list")}
         >
           User List
-        </button>
-        <button
-          className={`py-2 px-4 rounded font-semibold ${
-            activeTab === "create" ? "bg-gray-200" : ""
-          }`}
+        </Button>
+        <Button
+          variant={activeTab === "create" ? "secondary" : "outline"}
           onClick={() => setActiveTab("create")}
         >
           New User
-        </button>
+        </Button>
       </div>
+
       {activeTab === "list" ? (
         <div>
           <h1 className="text-2xl font-bold mb-4">User List</h1>
+
+          {/* ✅ Search bar */}
+          <div className="mb-4 flex justify-between items-center">
+            <Input
+              placeholder="Search users..."
+              value={globalFilter ?? ""}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              className="max-w-sm"
+            />
+          </div>
+
           {loading ? (
             <div>Loading...</div>
           ) : error ? (
             <div className="text-red-500">{error}</div>
           ) : (
-            <Table className="min-w-full bg-white rounded shadow">
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="py-2 px-4 border-b">Name</TableHead>
-                  <TableHead className="py-2 px-4 border-b">Email</TableHead>
-                  <TableHead className="py-2 px-4 border-b">Role</TableHead>
-                  <TableHead className="py-2 px-4 border-b">Projects</TableHead>
-                  <TableHead className="py-2 px-4 border-b">Created At</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="py-2 px-4 border-b">{user.name}</TableCell>
-                        {/* <TableCell className="flex items-center gap-2">
-//                     <Avatar className="h-8 w-8">
-//                       <AvatarImage src={u.avatarUrl} />
-//                       <AvatarFallback>
-//                         {(u.name || u.email).slice(0, 2).toUpperCase()}
-//                       </AvatarFallback>
-//                     </Avatar>
-//                     <span className="font-medium">{u.name || "—"}</span>
-//                   </TableCell> */}
-                    <TableCell className="py-2 px-4 border-b">{user.email}</TableCell>
-                    <TableCell className="py-2 px-4 border-b">{user.role}</TableCell>
-                    <TableCell className="py-2 px-4 border-b">
-                       {user.userProjects && user.userProjects.length > 0 ? (
-                          <span className="bg-green-100 text-green-700 px-3 py-1 rounded text-sm font-semibold">
-                             Assigned
-                          </span>
-                      ) : (
-                         <span className="bg-red-100 text-red-700 px-3 py-1 rounded text-sm font-semibold">
-                           Not Assigned
-                         </span>
-                       )}
-                    </TableCell>
-                    <TableCell className="py-2 px-4 border-b">
-                      {new Date(user.createdAt).toLocaleDateString()}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <>
+              <Table className="min-w-full bg-white rounded shadow">
+                <TableHeader>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <TableRow key={headerGroup.id}>
+                      {headerGroup.headers.map((header) => (
+                        <TableHead
+                          key={header.id}
+                          onClick={header.column.getToggleSortingHandler()}
+                          className="cursor-pointer select-none"
+                        >
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                          {{
+                            asc: " 🔼",
+                            desc: " 🔽",
+                          }[header.column.getIsSorted() as string] ?? null}
+                        </TableHead>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableHeader>
+                <TableBody>
+                  {table.getRowModel().rows.map((row) => (
+                    <TableRow key={row.id}>
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+
+              {/* ✅ Pagination Controls */}
+              <div className="flex justify-between items-center mt-4">
+                <div className="text-sm text-gray-500">
+                  Page {table.getState().pagination.pageIndex + 1} of{" "}
+                  {table.getPageCount()}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => table.previousPage()}
+                    disabled={!table.getCanPreviousPage()}
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => table.nextPage()}
+                    disabled={!table.getCanNextPage()}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            </>
           )}
         </div>
       ) : (
@@ -191,6 +313,137 @@ export default function Users() {
     </div>
   );
 }
+
+// import { useEffect, useState } from "react";
+// import api from "@/services/api";
+// import {
+//   Table,
+//   TableBody,
+//   TableCell,
+//   TableHead,
+//   TableHeader,
+//   TableRow,
+// } from "@/components/ui/table";
+// import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+// import { Badge } from "@/components/ui/badge";
+// import { Input } from "@/components/ui/input";
+// import { Skeleton } from "@/components/ui/skeleton";
+// import type { User } from "@/types/auth";
+// import { UserProject } from "../../../../Backend/src/generated/prisma/index";
+
+// export default function Users() {
+//   const [data, setData] = useState<User[]>([]);
+//   const [filtered, setFiltered] = useState<User[]>([]);
+//   const [q, setQ] = useState("");
+//   const [loading, setLoading] = useState(true);
+
+//   useEffect(() => {
+//     let ignore = false;
+//     (async () => {
+//       try {
+//         const res = await api.get("/api/admin/users");
+//         if (!ignore) {
+//           // Defensive: handle missing or invalid items
+//           const items = Array.isArray(res.data.items) ? res.data.items : [];
+//           setData(items);
+//           setFiltered(items);
+//         }
+//         // eslint-disable-next-line @typescript-eslint/no-unused-vars
+//       } catch (err) {
+//         alert("Failed to load users");
+//       } finally {
+//         setLoading(false);
+//       }
+//     })();
+//     return () => {
+//       ignore = true;
+//     };
+//   }, []);
+
+//   useEffect(() => {
+//     const lower = q.toLowerCase();
+//     setFiltered(
+//       data.filter(
+//         (u) =>
+//           u.email.toLowerCase().includes(lower) ||
+//           (u.name || "").toLowerCase().includes(lower) ||
+//           u.role.toLowerCase().includes(lower)
+//       )
+//     );
+//   }, [q, data]);
+
+//   return (
+//     <div className="space-y-4">
+//       <div className="flex items-center justify-between">
+//         <h1 className="text-xl font-semibold">Users</h1>
+//         <Input
+//           placeholder="Search users..."
+//           className="w-64"
+//           value={q}
+//           onChange={(e) => setQ(e.target.value)}
+//         />
+//       </div>
+
+//       {loading ? (
+//         <div className="space-y-2">
+//           {[...Array(5)].map((_, i) => (
+//             <div className="flex items-center gap-3" key={i}>
+//               <Skeleton className="h-6 w-6 rounded-full" />
+//               <Skeleton className="h-5 w-40" />
+//               <Skeleton className="h-5 w-28" />
+//               <Skeleton className="h-5 w-24" />
+//             </div>
+//           ))}
+//         </div>
+//       ) : (
+//         <div className="rounded-md border bg-white">
+//           <Table>
+//             <TableHeader>
+//               <TableRow>
+//                 <TableHead>User</TableHead>
+//                 <TableHead>Email</TableHead>
+//                 <TableHead>Role</TableHead>
+//               </TableRow>
+//             </TableHeader>
+//             <TableBody>
+//               {filtered.map((u) => (
+//                 <TableRow key={u.id}>
+//                   <TableCell className="flex items-center gap-2">
+//                     <Avatar className="h-8 w-8">
+//                       <AvatarImage src={u.avatarUrl} />
+//                       <AvatarFallback>
+//                         {(u.name || u.email).slice(0, 2).toUpperCase()}
+//                       </AvatarFallback>
+//                     </Avatar>
+//                     <span className="font-medium">{u.name || "—"}</span>
+//                   </TableCell>
+//                   <TableCell>{u.email}</TableCell>
+//                   <TableCell>
+//                     <Badge
+//                       variant={u.role === "ADMIN" ? "default" : "secondary"}
+//                     >
+//                       {u.role}
+//                     </Badge>
+//                   </TableCell>
+//                 </TableRow>
+//               ))}
+//               {filtered.length === 0 && (
+//                 <TableRow>
+//                   <TableCell
+//                     colSpan={3}
+//                     className="text-center text-sm text-gray-500"
+//                   >
+//                     No users found
+//                   </TableCell>
+//                 </TableRow>
+//               )}
+//             </TableBody>
+//           </Table>
+//         </div>
+//       )}
+//     </div>
+//   );
+// }
 
 // import { useEffect, useState } from "react";
 // import api from "@/services/api";
