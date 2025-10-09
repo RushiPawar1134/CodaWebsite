@@ -9,6 +9,7 @@ import UserDashboard from "@/pages/user/Dashboard";
 import Projects from "@/pages/user/Projects";
 import AdminProjects from "@/pages/admin/Projects";
 import Register from "@/pages/auth/Register";
+import CreateUserPage from "./pages/admin/CreateUserPage";
 
 import ProtectedRoute from "@/routes/ProtectRoute";
 import { withAdminLayout } from "@/layouts/withAdminLayout";
@@ -34,7 +35,7 @@ export default function App() {
         <Route element={<ProtectedRoute allow={["ADMIN"]} />}>
           <Route path="/admin" element={<AdminDashboardWL />} />
           <Route path="/admin/users" element={<UsersWL />} />
-          <Route path="/admin/users/new" element={<UsersWL />} />
+          <Route path="/admin/users/new" element={<CreateUserPage />} />
           <Route path="/admin/projects/*" element={<AdminProjectsWL />} />
         </Route>
 
