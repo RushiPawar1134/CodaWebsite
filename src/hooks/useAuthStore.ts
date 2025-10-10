@@ -32,6 +32,7 @@ export const useAuthStore = create<AuthState>()(
           console.log("Login response data:", data);
           set({ user: data.user, token: data.token, isLoading: false });
           return data.user;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (e: any) {
           set({ isLoading: false });
           console.error("Login error:", e.response?.data || e.message);
@@ -70,6 +71,23 @@ export const useAuthStore = create<AuthState>()(
       hasRole: (roles) => {
         const u = get().user;
         return !!u && roles.includes(u.role);
+      },
+
+      resetPassword: async ({
+        email,
+        password,
+      }: {
+        email: string;
+        password: string;
+      }) => {
+        set({ isLoading: true });
+        try {
+          await api.post("/api/auth/reset-password", { email, password });
+          set({ isLoading: false });
+        } catch (e) {
+          set({ isLoading: false });
+          throw e;
+        }
       },
     }),
     {

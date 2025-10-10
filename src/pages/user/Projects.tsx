@@ -27,7 +27,8 @@ export default function Projects() {
       });
   }, []);
 
-  if (loading) return <div className="p-8 text-center">Loading projects...</div>;
+  if (loading)
+    return <div className="p-8 text-center">Loading projects...</div>;
   if (error) return <div className="p-8 text-center text-red-500">{error}</div>;
 
   return (
