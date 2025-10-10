@@ -38,7 +38,11 @@ export default function App() {
         <Route element={<ProtectedRoute allow={["ADMIN"]} />}>
           <Route path="/admin" element={<AdminDashboardWL />} />
           <Route path="/admin/users" element={<UsersWL />} />
+<<<<<<< HEAD
           <Route path="/admin/users/new" element={<CreateUserPageWL />} />
+=======
+          <Route path="/admin/users/new" element={<CreateUserPage />} />
+>>>>>>> 591ba4c97abf5285659699ff8bb8c77a8d458246
           <Route path="/admin/projects/*" element={<AdminProjectsWL />} />
         </Route>
 

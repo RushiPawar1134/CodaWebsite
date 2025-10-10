@@ -3,6 +3,7 @@ import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import api from "@/services/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+<<<<<<< HEAD
 import { Button } from "@/components/ui/button";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -17,6 +18,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { LayoutGrid, List as ListIcon } from "lucide-react";
+=======
+>>>>>>> 591ba4c97abf5285659699ff8bb8c77a8d458246
 
 interface Project {
   id: string;
@@ -56,6 +59,7 @@ function ProjectList() {
   if (loading)
     return <div className="p-8 text-center">Loading projects...</div>;
   if (error) return <div className="p-8 text-center text-red-500">{error}</div>;
+<<<<<<< HEAD
 return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -78,6 +82,37 @@ return (
             <ListIcon className="w-5 h-5" />
           </Button>
         </div>
+=======
+
+  return (
+    <div>
+      <h1 className="text-2xl font-bold mb-6">Your Projects</h1>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {projects.map((project) => (
+          <Card key={project.id} className="p-4 flex flex-col items-center">
+            <CardHeader className="w-full p-0 mb-4">
+              <img
+                src={project.thumbnail}
+                alt={project.name}
+                className="w-full h-40 object-cover rounded"
+                style={{ maxWidth: "100%" }}
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src =
+                    "https://via.placeholder.com/300x160?text=No+Image";
+                }}
+              />
+            </CardHeader>
+            <CardContent className="text-center">
+              <CardTitle className="text-lg font-semibold mb-2">
+                {project.name}
+              </CardTitle>
+              <p className="text-gray-600 text-sm mb-2">
+                {project.description}
+              </p>
+            </CardContent>
+          </Card>
+        ))}
+>>>>>>> 591ba4c97abf5285659699ff8bb8c77a8d458246
       </div>
       {viewMode === "grid" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
