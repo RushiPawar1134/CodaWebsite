@@ -16,6 +16,15 @@ import ProtectedRoute from "@/routes/ProtectRoute";
 import { withAdminLayout } from "@/layouts/withAdminLayout";
 import { withUserLayout } from "@/layouts/withUserLayout";
 
+import { Toaster } from "react-hot-toast";
+
+
+
+// New imports for milestone pages
+import CreateMilestonePage from "./pages/admin/CreateMilestonePage";
+import Milestones from "./pages/admin/Milestones";
+const MilestonesWL = withAdminLayout(Milestones);
+
 const AdminDashboardWL = withAdminLayout(AdminDashboard);
 const UsersWL = withAdminLayout(Users);
 const CreateUserPageWL = withAdminLayout(CreateUserPage);
@@ -38,12 +47,9 @@ export default function App() {
         <Route element={<ProtectedRoute allow={["ADMIN"]} />}>
           <Route path="/admin" element={<AdminDashboardWL />} />
           <Route path="/admin/users" element={<UsersWL />} />
-<<<<<<< HEAD
           <Route path="/admin/users/new" element={<CreateUserPageWL />} />
-=======
-          <Route path="/admin/users/new" element={<CreateUserPage />} />
->>>>>>> 591ba4c97abf5285659699ff8bb8c77a8d458246
           <Route path="/admin/projects/*" element={<AdminProjectsWL />} />
+          <Route path="/admin/milestones/*" element={<MilestonesWL />} />
         </Route>
 
         {/* User Protected */}
@@ -54,56 +60,7 @@ export default function App() {
         {/* Fallback */}
         <Route path="*" element={<Login />} />
       </Routes>
+      <Toaster position="top-right" />
     </BrowserRouter>
   );
 }
-
-// import { BrowserRouter, Routes, Route } from 'react-router-dom';
-// import Login from '@/pages/auth/Login';
-// import ResetPassword from '@/pages/auth/ResetPassword';
-
-// import AdminDashboard from '@/pages/admin/Dashboard';
-// import Users from '@/pages/admin/Users';
-
-// import UserDashboard from '@/pages/user/Dashboard';
-// import Projects from '@/pages/user/Projects';
-
-// import ProtectedRoute from '@/routes/ProtectRoute';
-// import { withAdminLayout } from '@/layouts/withAdminLayout';
-// import { withUserLayout } from '@/layouts/withUserLayout';
-// import { CreateUser } from './pages/admin/Users';
-
-// const AdminDashboardWL = withAdminLayout(AdminDashboard);
-// const UsersWL = withAdminLayout(Users);
-
-// const UserDashboardWL = withUserLayout(UserDashboard);
-// const ProjectsWL = withUserLayout(Projects);
-
-// export default function App() {
-//   return (
-//     <BrowserRouter>
-//       <Routes>
-//         {/* Public */}
-//         <Route path="/" element={<Login />} />
-//         <Route path="/reset" element={<ResetPassword />} />
-
-//         {/* Admin */}
-//         <Route element={<ProtectedRoute allow={['ADMIN']} />}>
-//           <Route path="/admin" element={<AdminDashboardWL />} />
-//           <Route path="/admin/users" element={<UsersWL />} />
-//           {/* Example additional route */}
-//           {/* <Route path="/admin/projects" element={<ProjectsAdminWL />} /> */}
-//         </Route>
-
-//         {/* User */}
-//         <Route element={<ProtectedRoute allow={['USER', 'ADMIN']} />}>
-//           <Route path="/user" element={<UserDashboardWL />} />
-//           <Route path="/user/projects" element={<ProjectsWL />} />
-//         </Route>
-
-//         {/* Fallback */}
-//         <Route path="*" element={<Login />} />
-//       </Routes>
-//     </BrowserRouter>
-//   );
-// }

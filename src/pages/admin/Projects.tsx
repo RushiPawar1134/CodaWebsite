@@ -3,11 +3,9 @@ import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import api from "@/services/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-<<<<<<< HEAD
 import { Button } from "@/components/ui/button";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-// New
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -17,9 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { LayoutGrid, List as ListIcon } from "lucide-react";
-=======
->>>>>>> 591ba4c97abf5285659699ff8bb8c77a8d458246
+import { LayoutGrid, List as ListIcon, Edit2 } from "lucide-react";
 
 interface Project {
   id: string;
@@ -28,7 +24,6 @@ interface Project {
   thumbnail: string;
 }
 
-// New
 const projectSchema = z.object({
   name: z.string().min(2, "Project name required"),
   description: z.string().min(2, "Description required"),
@@ -40,8 +35,8 @@ function ProjectList() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // New
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const navigate = useNavigate();
 
   React.useEffect(() => {
     api
@@ -59,8 +54,8 @@ function ProjectList() {
   if (loading)
     return <div className="p-8 text-center">Loading projects...</div>;
   if (error) return <div className="p-8 text-center text-red-500">{error}</div>;
-<<<<<<< HEAD
-return (
+
+  return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Your Projects</h1>
@@ -82,42 +77,20 @@ return (
             <ListIcon className="w-5 h-5" />
           </Button>
         </div>
-=======
-
-  return (
-    <div>
-      <h1 className="text-2xl font-bold mb-6">Your Projects</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {projects.map((project) => (
-          <Card key={project.id} className="p-4 flex flex-col items-center">
-            <CardHeader className="w-full p-0 mb-4">
-              <img
-                src={project.thumbnail}
-                alt={project.name}
-                className="w-full h-40 object-cover rounded"
-                style={{ maxWidth: "100%" }}
-                onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).src =
-                    "https://via.placeholder.com/300x160?text=No+Image";
-                }}
-              />
-            </CardHeader>
-            <CardContent className="text-center">
-              <CardTitle className="text-lg font-semibold mb-2">
-                {project.name}
-              </CardTitle>
-              <p className="text-gray-600 text-sm mb-2">
-                {project.description}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
->>>>>>> 591ba4c97abf5285659699ff8bb8c77a8d458246
       </div>
       {viewMode === "grid" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {projects.map((project) => (
-            <Card key={project.id} className="p-4 flex flex-col items-center">
+            <Card key={project.id} className="p-4 flex flex-col items-center relative">
+              {/* Edit Icon */}
+              <button
+                className="absolute top-2 right-2 text-gray-400 hover:text-blue-600"
+                title="Add Milestone"
+                onClick={() => navigate(`/admin/milestones/new?projectId=${project.id}`)}
+                style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}
+              >
+                <Edit2 size={20} />
+              </button>
               <CardHeader className="w-full p-0 mb-4">
                 <img
                   src={project.thumbnail}
@@ -174,6 +147,7 @@ return (
     </div>
   );
 }
+
 function CreateProject({ onCreated }: { onCreated: () => void }) {
   const {
     register,
@@ -253,20 +227,6 @@ export default function Projects() {
 
   return (
     <div>
-      {/* <div className="flex gap-4 mb-8">
-        <Button
-          variant={!isCreate ? "secondary" : "outline"}
-          onClick={() => navigate("/admin/projects")}
-        >
-          Your Projects
-        </Button>
-        <Button
-          variant={!isCreate ? "secondary" : "outline"}
-          onClick={() => navigate("/admin/projects/new")}
-        >
-          New Project
-        </Button>
-      </div> */}
       <Routes>
         <Route path="/" element={<ProjectList />} />
         <Route path="/new" element={<CreateProject onCreated={() => {}} />} />

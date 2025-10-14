@@ -50,6 +50,7 @@ export function withAdminLayout<P>(Component: React.ComponentType<P>) {
 
           {/* Navigation */}
           <nav className="space-y-4 flex-1 overflow-y-auto">
+            {/* Project Section */}
             <div>
               <div className="text-xs font-semibold mb-2">Project</div>
               <Button
@@ -68,6 +69,7 @@ export function withAdminLayout<P>(Component: React.ComponentType<P>) {
               </Button>
             </div>
 
+            {/* User Section */}
             <div>
               <div className="text-xs font-semibold mb-2">User</div>
               <Button
@@ -85,10 +87,28 @@ export function withAdminLayout<P>(Component: React.ComponentType<P>) {
                 New User
               </Button>
             </div>
+            {/* Milestone Section */}
+            <div>
+              <div className="text-xs font-semibold mb-2">Milestone</div>
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                onClick={() => navigate("/admin/milestones")}
+              >
+                Milestone List
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                onClick={() => navigate("/admin/milestones/new")}
+              >
+                Create Milestone
+              </Button>
+            </div>
           </nav>
 
           {/* Sign Out */}
-          <div className="mt-auto">
+          <div className="mt-4">
             <Button
               variant="default"
               className="bg-purple-600 text-white font-semibold w-full"

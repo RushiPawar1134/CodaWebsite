@@ -21,11 +21,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input"; // ✅ for search box
-<<<<<<< HEAD
 import { ArrowUp, ArrowDown } from "lucide-react"; // ✅ NEW
 
-=======
->>>>>>> 591ba4c97abf5285659699ff8bb8c77a8d458246
 
 interface User {
   id: string;
@@ -45,15 +42,8 @@ interface CreateUserForm {
   userProjects: any[];
 }
 
-<<<<<<< HEAD
 // export function CreateUser({ onCreated }: { onCreated: () => void }) {
 //   // const [error, setError] = useState<string | null>(null);
-=======
-export function CreateUser({ onCreated }: { onCreated: () => void }) {
-  const { register, handleSubmit, reset } = useForm<CreateUserForm>();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
->>>>>>> 591ba4c97abf5285659699ff8bb8c77a8d458246
 
 //   // const onSubmit = async (data: CreateUserForm) => {
 //   //   setError(null);
@@ -67,7 +57,6 @@ export function CreateUser({ onCreated }: { onCreated: () => void }) {
 //   //   }
 //   // };
 
-<<<<<<< HEAD
 //   // return (
 //   //   <div className="max-w-md bg-white p-6 rounded shadow">
 //   //     <h1 className="text-xl font-bold mb-4">Create New User</h1>
@@ -124,56 +113,12 @@ export function CreateUser({ onCreated }: { onCreated: () => void }) {
 //   //   </div>
 //   // );
 // }
-=======
-  return (
-    <div className="max-w-md bg-white p-6 rounded shadow">
-      <h1 className="text-xl font-bold mb-4">Create New User</h1>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <input
-          {...register("email", { required: true })}
-          placeholder="Email"
-          className="w-full p-2 border rounded"
-        />
-        <input
-          {...register("name", { required: true })}
-          placeholder="Name"
-          className="w-full p-2 border rounded"
-        />
-        <input
-          {...register("password", { required: true })}
-          type="password"
-          placeholder="Password"
-          className="w-full p-2 border rounded"
-        />
-        <select {...register("role")} className="w-full p-2 border rounded">
-          <option value="USER">User</option>
-          <option value="ADMIN">Admin</option>
-        </select>
-
-        <Button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-        >
-          {loading ? "Creating..." : "Create User"}
-        </Button>
-
-        {error && <div className="text-red-500">{error}</div>}
-      </form>
-    </div>
-  );
-}
->>>>>>> 591ba4c97abf5285659699ff8bb8c77a8d458246
 
 export default function Users() {
   const [data, setData] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-<<<<<<< HEAD
   // const [activeTab, setActiveTab] = useState<"list" | "create">("list");
-=======
-  const [activeTab, setActiveTab] = useState<"list" | "create">("list");
->>>>>>> 591ba4c97abf5285659699ff8bb8c77a8d458246
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState(""); // ✅ NEW
 
@@ -275,11 +220,7 @@ export default function Users() {
 
   return (
     <div className="space-y-4">
-<<<<<<< HEAD
       {/* <div className="flex gap-4 mb-4">
-=======
-      <div className="flex gap-4 mb-4">
->>>>>>> 591ba4c97abf5285659699ff8bb8c77a8d458246
         <Button
           variant={activeTab === "list" ? "secondary" : "outline"}
           onClick={() => setActiveTab("list")}
@@ -292,15 +233,9 @@ export default function Users() {
         >
           New User
         </Button>
-<<<<<<< HEAD
       </div> */}
 
       {/* {activeTab === "list" ? ( */}
-=======
-      </div>
-
-      {activeTab === "list" ? (
->>>>>>> 591ba4c97abf5285659699ff8bb8c77a8d458246
         <div>
           <h1 className="text-2xl font-bold mb-4">User List</h1>
 
@@ -321,11 +256,7 @@ export default function Users() {
           ) : (
             <>
               <Table className="min-w-full bg-white rounded shadow">
-<<<<<<< HEAD
                 {/* <TableHeader>
-=======
-                <TableHeader>
->>>>>>> 591ba4c97abf5285659699ff8bb8c77a8d458246
                   {table.getHeaderGroups().map((headerGroup) => (
                     <TableRow key={headerGroup.id}>
                       {headerGroup.headers.map((header) => (
@@ -346,7 +277,6 @@ export default function Users() {
                       ))}
                     </TableRow>
                   ))}
-<<<<<<< HEAD
                 </TableHeader> */}
                 <TableHeader>
   {table.getHeaderGroups().map((headerGroup) => (
@@ -398,9 +328,6 @@ export default function Users() {
     </TableRow>
   ))}
 </TableHeader>
-=======
-                </TableHeader>
->>>>>>> 591ba4c97abf5285659699ff8bb8c77a8d458246
                 <TableBody>
                   {table.getRowModel().rows.map((row) => (
                     <TableRow key={row.id}>
@@ -449,268 +376,3 @@ export default function Users() {
     </div>
   );
 }
-<<<<<<< HEAD
-=======
-
-// import { useEffect, useState } from "react";
-// import api from "@/services/api";
-// import {
-//   Table,
-//   TableBody,
-//   TableCell,
-//   TableHead,
-//   TableHeader,
-//   TableRow,
-// } from "@/components/ui/table";
-// import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-// import { Badge } from "@/components/ui/badge";
-// import { Input } from "@/components/ui/input";
-// import { Skeleton } from "@/components/ui/skeleton";
-// import type { User } from "@/types/auth";
-// import { UserProject } from "../../../../Backend/src/generated/prisma/index";
-
-// export default function Users() {
-//   const [data, setData] = useState<User[]>([]);
-//   const [filtered, setFiltered] = useState<User[]>([]);
-//   const [q, setQ] = useState("");
-//   const [loading, setLoading] = useState(true);
-
-//   useEffect(() => {
-//     let ignore = false;
-//     (async () => {
-//       try {
-//         const res = await api.get("/api/admin/users");
-//         if (!ignore) {
-//           // Defensive: handle missing or invalid items
-//           const items = Array.isArray(res.data.items) ? res.data.items : [];
-//           setData(items);
-//           setFiltered(items);
-//         }
-//         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-//       } catch (err) {
-//         alert("Failed to load users");
-//       } finally {
-//         setLoading(false);
-//       }
-//     })();
-//     return () => {
-//       ignore = true;
-//     };
-//   }, []);
-
-//   useEffect(() => {
-//     const lower = q.toLowerCase();
-//     setFiltered(
-//       data.filter(
-//         (u) =>
-//           u.email.toLowerCase().includes(lower) ||
-//           (u.name || "").toLowerCase().includes(lower) ||
-//           u.role.toLowerCase().includes(lower)
-//       )
-//     );
-//   }, [q, data]);
-
-//   return (
-//     <div className="space-y-4">
-//       <div className="flex items-center justify-between">
-//         <h1 className="text-xl font-semibold">Users</h1>
-//         <Input
-//           placeholder="Search users..."
-//           className="w-64"
-//           value={q}
-//           onChange={(e) => setQ(e.target.value)}
-//         />
-//       </div>
-
-//       {loading ? (
-//         <div className="space-y-2">
-//           {[...Array(5)].map((_, i) => (
-//             <div className="flex items-center gap-3" key={i}>
-//               <Skeleton className="h-6 w-6 rounded-full" />
-//               <Skeleton className="h-5 w-40" />
-//               <Skeleton className="h-5 w-28" />
-//               <Skeleton className="h-5 w-24" />
-//             </div>
-//           ))}
-//         </div>
-//       ) : (
-//         <div className="rounded-md border bg-white">
-//           <Table>
-//             <TableHeader>
-//               <TableRow>
-//                 <TableHead>User</TableHead>
-//                 <TableHead>Email</TableHead>
-//                 <TableHead>Role</TableHead>
-//               </TableRow>
-//             </TableHeader>
-//             <TableBody>
-//               {filtered.map((u) => (
-//                 <TableRow key={u.id}>
-//                   <TableCell className="flex items-center gap-2">
-//                     <Avatar className="h-8 w-8">
-//                       <AvatarImage src={u.avatarUrl} />
-//                       <AvatarFallback>
-//                         {(u.name || u.email).slice(0, 2).toUpperCase()}
-//                       </AvatarFallback>
-//                     </Avatar>
-//                     <span className="font-medium">{u.name || "—"}</span>
-//                   </TableCell>
-//                   <TableCell>{u.email}</TableCell>
-//                   <TableCell>
-//                     <Badge
-//                       variant={u.role === "ADMIN" ? "default" : "secondary"}
-//                     >
-//                       {u.role}
-//                     </Badge>
-//                   </TableCell>
-//                 </TableRow>
-//               ))}
-//               {filtered.length === 0 && (
-//                 <TableRow>
-//                   <TableCell
-//                     colSpan={3}
-//                     className="text-center text-sm text-gray-500"
-//                   >
-//                     No users found
-//                   </TableCell>
-//                 </TableRow>
-//               )}
-//             </TableBody>
-//           </Table>
-//         </div>
-//       )}
-//     </div>
-//   );
-// }
-
-// import { useEffect, useState } from "react";
-// import api from "@/services/api";
-// import {
-//   Table,
-//   TableBody,
-//   TableCell,
-//   TableHead,
-//   TableHeader,
-//   TableRow,
-// } from "@/components/ui/table";
-// import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-// import { Badge } from "@/components/ui/badge";
-// import { Input } from "@/components/ui/input";
-// import { Skeleton } from "@/components/ui/skeleton";
-// import type { User } from "@/types/auth";
-// import { UserProject } from "../../../../Backend/src/generated/prisma/index";
-
-// export default function Users() {
-//   const [data, setData] = useState<User[]>([]);
-//   const [filtered, setFiltered] = useState<User[]>([]);
-//   const [q, setQ] = useState("");
-//   const [loading, setLoading] = useState(true);
-
-//   useEffect(() => {
-//     let ignore = false;
-//     (async () => {
-//       try {
-//         const res = await api.get("/api/admin/users");
-//         if (!ignore) {
-//           // Defensive: handle missing or invalid items
-//           const items = Array.isArray(res.data.items) ? res.data.items : [];
-//           setData(items);
-//           setFiltered(items);
-//         }
-//         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-//       } catch (err) {
-//         alert("Failed to load users");
-//       } finally {
-//         setLoading(false);
-//       }
-//     })();
-//     return () => {
-//       ignore = true;
-//     };
-//   }, []);
-
-//   useEffect(() => {
-//     const lower = q.toLowerCase();
-//     setFiltered(
-//       data.filter(
-//         (u) =>
-//           u.email.toLowerCase().includes(lower) ||
-//           (u.name || "").toLowerCase().includes(lower) ||
-//           u.role.toLowerCase().includes(lower)
-//       )
-//     );
-//   }, [q, data]);
-
-//   return (
-//     <div className="space-y-4">
-//       <div className="flex items-center justify-between">
-//         <h1 className="text-xl font-semibold">Users</h1>
-//         <Input
-//           placeholder="Search users..."
-//           className="w-64"
-//           value={q}
-//           onChange={(e) => setQ(e.target.value)}
-//         />
-//       </div>
-
-//       {loading ? (
-//         <div className="space-y-2">
-//           {[...Array(5)].map((_, i) => (
-//             <div className="flex items-center gap-3" key={i}>
-//               <Skeleton className="h-6 w-6 rounded-full" />
-//               <Skeleton className="h-5 w-40" />
-//               <Skeleton className="h-5 w-28" />
-//               <Skeleton className="h-5 w-24" />
-//             </div>
-//           ))}
-//         </div>
-//       ) : (
-//         <div className="rounded-md border bg-white">
-//           <Table>
-//             <TableHeader>
-//               <TableRow>
-//                 <TableHead>User</TableHead>
-//                 <TableHead>Email</TableHead>
-//                 <TableHead>Role</TableHead>
-//               </TableRow>
-//             </TableHeader>
-//             <TableBody>
-//               {filtered.map((u) => (
-//                 <TableRow key={u.id}>
-//                   <TableCell className="flex items-center gap-2">
-//                     <Avatar className="h-8 w-8">
-//                       <AvatarImage src={u.avatarUrl} />
-//                       <AvatarFallback>
-//                         {(u.name || u.email).slice(0, 2).toUpperCase()}
-//                       </AvatarFallback>
-//                     </Avatar>
-//                     <span className="font-medium">{u.name || "—"}</span>
-//                   </TableCell>
-//                   <TableCell>{u.email}</TableCell>
-//                   <TableCell>
-//                     <Badge
-//                       variant={u.role === "ADMIN" ? "default" : "secondary"}
-//                     >
-//                       {u.role}
-//                     </Badge>
-//                   </TableCell>
-//                 </TableRow>
-//               ))}
-//               {filtered.length === 0 && (
-//                 <TableRow>
-//                   <TableCell
-//                     colSpan={3}
-//                     className="text-center text-sm text-gray-500"
-//                   >
-//                     No users found
-//                   </TableCell>
-//                 </TableRow>
-//               )}
-//             </TableBody>
-//           </Table>
-//         </div>
-//       )}
-//     </div>
-//   );
-// }
->>>>>>> 591ba4c97abf5285659699ff8bb8c77a8d458246
