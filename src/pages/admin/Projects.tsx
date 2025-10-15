@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -80,67 +81,92 @@ function ProjectList() {
       </div>
       {viewMode === "grid" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {projects.map((project) => (
-            <Card key={project.id} className="p-4 flex flex-col items-center relative">
-              {/* Edit Icon */}
-              <button
-                className="absolute top-2 right-2 text-gray-400 hover:text-blue-600"
-                title="Add Milestone"
-                onClick={() => navigate(`/admin/milestones/new?projectId=${project.id}`)}
-                style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}
-              >
-                <Edit2 size={20} />
-              </button>
-              <CardHeader className="w-full p-0 mb-4">
-                <img
-                  src={project.thumbnail}
-                  alt={project.name}
-                  className="w-full h-40 object-cover rounded"
-                  style={{ maxWidth: "100%" }}
-                  onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).src =
-                      "https://via.placeholder.com/300x160?text=No+Image";
-                  }}
-                />
-              </CardHeader>
-              <CardContent className="text-center">
-                <CardTitle className="text-lg font-semibold mb-2">
-                  {project.name}
-                </CardTitle>
-                <p className="text-gray-600 text-sm mb-2">
-                  {project.description}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
+{projects.map((project) => (
+  <Card
+    key={project.id}
+    className="p-4 flex flex-col items-center relative"
+    style={{ minHeight: 320 }}
+  >
+    {/* Edit Icon */}
+    <button
+      className="absolute bottom-4 right-4 z-10 bg-white rounded-full shadow-lg p-2 border border-gray-300 hover:bg-blue-100 transition"
+      title="Add Milestone"
+      onClick={() =>
+        navigate(`/admin/projects/${project.id}/milestones/new`)
+      }
+      style={{
+        cursor: "pointer",
+        boxShadow: "0 4px 16px rgba(0,0,0,0.10)",
+      }}
+    >
+      <Edit2 size={22} className="text-blue-600" />
+    </button>
+    <CardHeader className="w-full p-0 mb-4" style={{ marginTop: "24px" }}>
+      <img
+        src={project.thumbnail}
+        alt={project.name}
+        className="w-full h-40 object-cover rounded"
+        style={{ maxWidth: "100%" }}
+        onError={(e) => {
+          (e.currentTarget as HTMLImageElement).src =
+            "https://via.placeholder.com/300x160?text=No+Image";
+        }}
+      />
+    </CardHeader>
+    <CardContent className="text-center">
+      <CardTitle className="text-lg font-semibold mb-2">
+        {project.name}
+      </CardTitle>
+      <p className="text-gray-600 text-sm mb-2">
+        {project.description}
+      </p>
+    </CardContent>
+  </Card>
+))}
         </div>
       ) : (
         <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Thumbnail</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Description</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {projects.map((project) => (
-              <TableRow key={project.id}>
-                <TableCell>
-                  <img
-                    src={project.thumbnail}
-                    alt={project.name}
-                    className="w-24 h-16 object-cover rounded"
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).src =
-                        "https://via.placeholder.com/100x60?text=No+Image";
-                    }}
-                  />
-                </TableCell>
-                <TableCell className="font-semibold">{project.name}</TableCell>
-                <TableCell>{project.description}</TableCell>
-              </TableRow>
-            ))}
+<TableHeader>
+  <TableRow>
+    <TableHead>Thumbnail</TableHead>
+    <TableHead>Name</TableHead>
+    <TableHead>Description</TableHead>
+    <TableHead>Edit</TableHead> {/* Add this */}
+  </TableRow>
+</TableHeader>
+<TableBody>
+  {projects.map((project) => (
+    <TableRow key={project.id}>
+      <TableCell>
+        <img
+          src={project.thumbnail}
+          alt={project.name}
+          className="w-24 h-16 object-cover rounded"
+          onError={(e) => {
+            (e.currentTarget as HTMLImageElement).src =
+              "https://via.placeholder.com/100x60?text=No+Image";
+          }}
+        />
+      </TableCell>
+      <TableCell className="font-semibold">{project.name}</TableCell>
+      <TableCell>{project.description}</TableCell>
+      <TableCell>
+        <button
+          className="bg-white rounded-full shadow p-2 border border-gray-200 hover:bg-blue-50"
+          title="Add Milestone"
+          onClick={() =>
+            navigate(`/admin/projects/${project.id}/milestones/new`)
+          }
+          style={{
+            cursor: "pointer",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+          }}
+        >
+          <Edit2 size={20} className="text-blue-600" />
+        </button>
+      </TableCell>
+    </TableRow>
+  ))}
           </TableBody>
         </Table>
       )}

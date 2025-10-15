@@ -97,13 +97,13 @@ export function withAdminLayout<P>(Component: React.ComponentType<P>) {
               >
                 Milestone List
               </Button>
-              <Button
+              {/* <Button
                 variant="ghost"
                 className="w-full justify-start"
                 onClick={() => navigate("/admin/milestones/new")}
               >
                 Create Milestone
-              </Button>
+              </Button> */}
             </div>
           </nav>
 

@@ -3,14 +3,12 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import api from "@/services/api";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 
 const CreateMilestonePage: React.FC = () => {
-  const location = useLocation();
   const navigate = useNavigate();
-  const params = new URLSearchParams(location.search);
-  const projectId = params.get("projectId");
+  const { projectId } = useParams();
 
   const [name, setName] = useState("");
   const [fileName, setFileName] = useState("");
@@ -21,6 +19,7 @@ const CreateMilestonePage: React.FC = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setCsvFile(e.target.files[0]);
+      setFileName(e.target.files[0].name);
     }
   };
 

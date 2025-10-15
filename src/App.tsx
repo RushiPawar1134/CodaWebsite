@@ -23,6 +23,7 @@ import { Toaster } from "react-hot-toast";
 // New imports for milestone pages
 import CreateMilestonePage from "./pages/admin/CreateMilestonePage";
 import Milestones from "./pages/admin/Milestones";
+import MilestoneView from "./pages/admin/MilestoneView";
 const MilestonesWL = withAdminLayout(Milestones);
 
 const AdminDashboardWL = withAdminLayout(AdminDashboard);
@@ -49,7 +50,9 @@ export default function App() {
           <Route path="/admin/users" element={<UsersWL />} />
           <Route path="/admin/users/new" element={<CreateUserPageWL />} />
           <Route path="/admin/projects/*" element={<AdminProjectsWL />} />
+          <Route path="/admin/projects/:projectId/milestones/new" element={<CreateMilestonePage />} />
           <Route path="/admin/milestones/*" element={<MilestonesWL />} />
+          <Route path="/admin/milestones/:milestoneId" element={<MilestoneView />} />
         </Route>
 
         {/* User Protected */}
