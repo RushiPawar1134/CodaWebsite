@@ -211,11 +211,10 @@ function CreateProject({ onCreated }: { onCreated: () => void }) {
           )}
         </div>
         <div>
-          <Input
-            as="textarea"
+          <textarea
             {...register("description")}
             placeholder="Description"
-            className="w-full"
+            className="w-full border rounded px-3 py-2"
             rows={3}
           />
           {errors.description && (

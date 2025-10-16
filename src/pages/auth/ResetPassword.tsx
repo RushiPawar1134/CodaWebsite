@@ -1,79 +1,116 @@
-import { useNavigate, Link } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
+import api from "@/services/api";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useAuthStore } from "@/hooks/useAuthStore";
-
-const schema = z.object({
-  email: z.string().email("Valid email required"),
-  password: z.string().min(6, "Minimum 6 characters"),
-  confirmPassword: z.string().min(6, "Minimum 6 characters"),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"],
-});
-
-type FormData = z.infer<typeof schema>;
+import { useNavigate } from "react-router-dom";
 
 export default function ResetPassword() {
-  const navigate = useNavigate();
-  const resetPassword = useAuthStore((s) => s.resetPassword); // You should implement this in your store
-  const isLoading = useAuthStore((s) => s.isLoading);
+  const [step, setStep] = useState(1);
+  const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+ const navigate = useNavigate();
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<FormData>({
-    resolver: zodResolver(schema),
-  });
-
-  const onSubmit = async (data: FormData) => {
+  const handleSendOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
     try {
-      await resetPassword({ email: data.email, password: data.password });
-      alert("Password reset successful. Please login.");
-      navigate("/auth/login");
-    } catch (e: any) {
-      alert(e?.response?.data?.message || "Reset failed");
+      await api.post("/api/auth/request-reset", { email });
+      setStep(2);
+    } catch (err: any) {
+      setError(err?.response?.data?.message || "Failed to send OTP");
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    try {
+      await api.post("/api/auth/verify-otp", { email, otp });
+      setStep(3);
+    } catch (err: any) {
+      setError(err?.response?.data?.message || "Invalid OTP");
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+    try {
+      await api.post("/api/auth/reset-password-otp", { email, otp, password });
+      setSuccess("Password reset successful! You can now login.");
+      setStep(4);
+    } catch (err: any) {
+      setError(err?.response?.data?.message || "Failed to reset password");
     }
   };
 
   return (
-    <div className="grid min-h-screen grid-cols-1 md:grid-cols-2">
-      <div className="flex items-center justify-center p-6">
-        <form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-sm space-y-4">
-          <h1 className="text-2xl font-bold">Reset Password</h1>
-          <p className="text-sm text-gray-500">Enter your email and new password</p>
-
-          <div>
-            <Input placeholder="Email" {...register("email")} />
-            {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>}
-          </div>
-          <div>
-            <Input type="password" placeholder="New Password" {...register("password")} />
-            {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password.message}</p>}
-          </div>
-          <div>
-            <Input type="password" placeholder="Confirm Password" {...register("confirmPassword")} />
-            {errors.confirmPassword && <p className="mt-1 text-xs text-red-500">{errors.confirmPassword.message}</p>}
-          </div>
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Resetting..." : "Reset Password"}
+    <div className="max-w-md mx-auto bg-white p-6 rounded shadow">
+      <h1 className="text-xl font-bold mb-4">Reset Password</h1>
+      {step === 1 && (
+        <form onSubmit={handleSendOtp} className="space-y-4">
+          <Input
+            type="email"
+            placeholder="Enter your email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            required
+          />
+          <Button type="submit" className="w-full bg-blue-600 text-white">
+            Send OTP
           </Button>
-          <div className="text-center">
-            <Link to="/auth/login" className="text-sm text-blue-600 hover:underline">Back to Login</Link>
-          </div>
+          {error && <div className="text-red-500">{error}</div>}
         </form>
-      </div>
-      <div className="hidden bg-gray-50 md:block">
-        <img
-          src="https://images.unsplash.com/photo-1554232456-8727aae0cfa4?w=400&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fGNvbXBhbnl8ZW58MHx8MHx8fDA%3D"
-          alt="Company visual"
-          className="h-full w-full object-cover"
-        />
-      </div>
+      )}
+      {step === 2 && (
+        <form onSubmit={handleVerifyOtp} className="space-y-4">
+          <Input
+            type="text"
+            placeholder="Enter OTP"
+            value={otp}
+            onChange={e => setOtp(e.target.value)}
+            required
+          />
+          <Button type="submit" className="w-full bg-blue-600 text-white">
+            Verify OTP
+          </Button>
+          {error && <div className="text-red-500">{error}</div>}
+        </form>
+      )}
+      {step === 3 && (
+        <form onSubmit={handleResetPassword} className="space-y-4">
+          <Input
+            type="password"
+            placeholder="New password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            required
+          />
+          <Input
+            type="password"
+            placeholder="Confirm new password"
+            value={confirmPassword}
+            onChange={e => setConfirmPassword(e.target.value)}
+            required
+          />
+          <Button type="submit" className="w-full bg-blue-600 text-white">
+            Reset Password
+          </Button>
+          {error && <div className="text-red-500">{error}</div>}
+        </form>
+      )}
+      {step === 4 && (
+        <div className="text-green-600">{success}
+        <Button className="bg-blue-600 text-white" onClick={() => navigate("/login")}>Login</Button></div>
+      )}
     </div>
   );
 }

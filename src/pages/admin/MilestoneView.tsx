@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -12,8 +11,21 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import api from "@/services/api";
+import { toast } from "react-hot-toast";
 
 const SUMMARY_COLUMNS = ["Type/Disciplin", "Units", "Summary"];
+
+// Debounce hook
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = React.useState(value);
+
+  React.useEffect(() => {
+    const handler = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+
+  return debouncedValue;
+}
 
 const groupRowsByType = (rows: any[]) => {
   const groups: Record<string, { normals: any[]; total: any | null }> = {};
@@ -37,12 +49,24 @@ const MilestoneView: React.FC = () => {
   const [showSummary, setShowSummary] = useState(false);
   const [showPpt, setShowPpt] = useState(false);
   const [showMasterSheet, setShowMasterSheet] = useState(false);
+
+  // Pagination
   const [masterSheetPage, setMasterSheetPage] = useState(1);
-  const rowsPerPage = 5;
+  const rowsPerPage = 7;
+
+  // Row highlight and comment editing
+  const [selectedRowIdx, setSelectedRowIdx] = useState<number | null>(null);
   const [editedComments, setEditedComments] = useState<{
     [rowIdx: number]: string;
   }>({});
   const [savingRow, setSavingRow] = useState<number | null>(null);
+  const [selectedSummaryCell, setSelectedSummaryCell] = useState<{
+    row: number;
+    col: number;
+  } | null>(null);
+
+  // Debounced comments for auto-save
+  const debouncedComments = useDebounce(editedComments, 800);
 
   useEffect(() => {
     api.get(`/api/milestones/${milestoneId}`).then((res) => {
@@ -63,6 +87,46 @@ const MilestoneView: React.FC = () => {
       setLoading(false);
     });
   }, [milestoneId]);
+
+  // Auto-save comment when debounced value changes
+  useEffect(() => {
+    if (!milestone || !debouncedComments) return;
+    const rowIdx = Number(Object.keys(debouncedComments)[0]);
+    if (
+      debouncedComments[rowIdx] !==
+      (milestone.masterSheetData?.[rowIdx]?.["COMMENTS/REMARKS"] ?? "")
+    ) {
+      handleSaveComment(rowIdx, debouncedComments[rowIdx]);
+    }
+    // eslint-disable-next-line
+  }, [debouncedComments]);
+
+  const handleCommentChange = (idx: number, value: string) => {
+    setEditedComments({ [idx]: value });
+  };
+
+const handleSaveComment = async (rowIdx: number, value: string) => {
+  setSavingRow(rowIdx);
+  const updatedRows = [...masterSheetRows];
+  updatedRows[rowIdx]["COMMENTS/REMARKS"] = value || "";
+  try {
+    await api.patch(`/api/milestones/${milestoneId}/master-sheet`, {
+      masterSheetData: updatedRows,
+    });
+    setMilestone((prev: any) => ({
+      ...prev,
+      masterSheetData: updatedRows,
+    }));
+    if (value && value.trim().length > 0) {
+      toast.success("Comment Created");
+    } else {
+      toast.success("Comment Removed");
+    }
+  } catch (e) {
+    toast.error("Failed to save comment");
+  }
+  setSavingRow(null);
+};
 
   const getSummaryRows = (milestone: any) => {
     if (!milestone?.csvSummary?.summaryData) return [];
@@ -87,30 +151,6 @@ const MilestoneView: React.FC = () => {
     (masterSheetPage - 1) * rowsPerPage,
     masterSheetPage * rowsPerPage
   );
-
-  const handleCommentChange = (idx: number, value: string) => {
-    setEditedComments((prev) => ({ ...prev, [idx]: value }));
-  };
-
-  const handleSaveComment = async (rowIdx: number) => {
-    setSavingRow(rowIdx);
-    // Prepare updated masterSheetData
-    const updatedRows = [...masterSheetRows];
-    updatedRows[rowIdx]["COMMENTS/REMARKS"] = editedComments[rowIdx] || "";
-    try {
-      await api.patch(`/api/milestones/${milestoneId}/master-sheet`, {
-        masterSheetData: updatedRows,
-      });
-      // Update milestone state
-      setMilestone((prev: any) => ({
-        ...prev,
-        masterSheetData: updatedRows,
-      }));
-    } catch (e) {
-      alert("Failed to save comment");
-    }
-    setSavingRow(null);
-  };
 
   return (
     <div className="p-8 max-w-8xl mx-auto">
@@ -140,32 +180,42 @@ const MilestoneView: React.FC = () => {
                   </TableHeader>
                   <TableBody>
                     {Object.entries(groups).map(
-                      ([type, { normals, total }]) => (
+                      ([type, { normals, total }], rowIdx) => (
                         <TableRow
                           key={type}
                           className={total ? "bg-gray-100 font-bold" : ""}
                         >
-                          <TableCell>
-                            {total &&
-                            total[2] !== undefined &&
-                            total[2] !== null
+                          {[
+                            total && total[2] !== undefined && total[2] !== null
                               ? String(total[2])
-                              : type}
-                          </TableCell>
-                          <TableCell>
-                            {total &&
-                            total[6] !== undefined &&
-                            total[6] !== null
+                              : type,
+                            total && total[6] !== undefined && total[6] !== null
                               ? String(total[6])
-                              : ""}
-                          </TableCell>
-                          <TableCell>
-                            {total &&
-                            total[9] !== undefined &&
-                            total[9] !== null
+                              : "",
+                            total && total[9] !== undefined && total[9] !== null
                               ? String(total[9])
-                              : ""}
-                          </TableCell>
+                              : "",
+                          ].map((cell, colIdx) => (
+                            <TableCell
+                              key={colIdx}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedSummaryCell({
+                                  row: rowIdx,
+                                  col: colIdx,
+                                });
+                              }}
+                              style={
+                                selectedSummaryCell &&
+                                selectedSummaryCell.row === rowIdx &&
+                                selectedSummaryCell.col === colIdx
+                                  ? { background: "#e0e7ff", cursor: "pointer" }
+                                  : { cursor: "pointer" }
+                              }
+                            >
+                              {cell}
+                            </TableCell>
+                          ))}
                         </TableRow>
                       )
                     )}
@@ -189,7 +239,17 @@ const MilestoneView: React.FC = () => {
                   <TableHeader>
                     <TableRow>
                       {masterSheetColumns.map((col) => (
-                        <TableHead key={col}>{col}</TableHead>
+                        <TableHead
+                          key={col}
+                          style={
+                            col.toLowerCase() === "img 1" ||
+                            col.toLowerCase() === "img 2"
+                              ? { minWidth: 240, width: 240, maxWidth: 240 }
+                              : {}
+                          }
+                        >
+                          {col}
+                        </TableHead>
                       ))}
                     </TableRow>
                   </TableHeader>
@@ -197,46 +257,60 @@ const MilestoneView: React.FC = () => {
                     {paginatedRows.map((row: any, idx: number) => (
                       <TableRow
                         key={idx + (masterSheetPage - 1) * rowsPerPage}
-                        style={{ height: 120 }} // Increase row height
+                        style={{
+                          height: 120,
+                          background:
+                            selectedRowIdx ===
+                            idx + (masterSheetPage - 1) * rowsPerPage
+                              ? "#e0e7ff"
+                              : undefined,
+                          cursor: "pointer",
+                        }}
+                        onClick={() =>
+                          setSelectedRowIdx(
+                            idx + (masterSheetPage - 1) * rowsPerPage
+                          )
+                        }
                       >
                         {masterSheetColumns.map((col) => {
-  // For IMG 1 and IMG 2 columns, show thumbnail and set cell width
-  if (
-    (col.toLowerCase() === "img 1" || col.toLowerCase() === "img 2") &&
-    row[col]
-  ) {
-    return (
-      <TableCell
-        key={col}
-        style={{
-          verticalAlign: "middle",
-          minWidth: 240, // Set min width for the cell
-          width: 240,
-          maxWidth: 240,
-        }}
-      >
-        {row[col] ? (
-          <img
-            src={row[col]}
-            alt={`thumbnail-${col}-${idx}`}
-            style={{
-              width: 220, // Image width
-              height: 140, // Image height
-              objectFit: "cover",
-              borderRadius: 4,
-              display: "block",
-              margin: "0 auto",
-            }}
-            onError={(e) =>
-              (e.currentTarget.src =
-                "https://via.placeholder.com/220x140?text=No+Image")
-            }
-          />
-        ) : null}
-      </TableCell>
-    );
-  }
-                          // For comments/remarks columns, show editable input and save button
+                          // For IMG 1 and IMG 2 columns, show thumbnail and set cell width
+                          if (
+                            (col.toLowerCase() === "img 1" ||
+                              col.toLowerCase() === "img 2") &&
+                            row[col]
+                          ) {
+                            return (
+                              <TableCell
+                                key={col}
+                                style={{
+                                  verticalAlign: "middle",
+                                  minWidth: 240,
+                                  width: 240,
+                                  maxWidth: 240,
+                                }}
+                              >
+                                {row[col] ? (
+                                  <img
+                                    src={row[col]}
+                                    alt={`thumbnail-${col}-${idx}`}
+                                    style={{
+                                      width: 220,
+                                      height: 140,
+                                      objectFit: "cover",
+                                      borderRadius: 4,
+                                      display: "block",
+                                      margin: "0 auto",
+                                    }}
+                                    onError={(e) =>
+                                      (e.currentTarget.src =
+                                        "https://via.placeholder.com/220x140?text=No+Image")
+                                    }
+                                  />
+                                ) : null}
+                              </TableCell>
+                            );
+                          }
+                          // For comments/remarks columns, show editable textarea (auto-save)
                           if (col.toLowerCase().includes("comment")) {
                             return (
                               <TableCell
@@ -258,27 +332,17 @@ const MilestoneView: React.FC = () => {
                                       e.target.value
                                     )
                                   }
-                                  className="border rounded px-2 py-1 w-48 h-16 resize-vertical"
+                                  className="border rounded px-2 py-1 w-48 h-24 resize-vertical"
                                   style={{ minHeight: 80 }}
-                                />
-                                <Button
-                                  size="sm"
-                                  className="ml-2"
                                   disabled={
                                     savingRow ===
                                     idx + (masterSheetPage - 1) * rowsPerPage
                                   }
-                                  onClick={() =>
-                                    handleSaveComment(
-                                      idx + (masterSheetPage - 1) * rowsPerPage
-                                    )
-                                  }
-                                >
-                                  Save
-                                </Button>
+                                />
                               </TableCell>
                             );
                           }
+                          // Default cell
                           return <TableCell key={col}>{row[col]}</TableCell>;
                         })}
                       </TableRow>
@@ -323,51 +387,51 @@ const MilestoneView: React.FC = () => {
             >
               PPT Data {showPpt ? "▲" : "▼"}
             </Button>
-{showPpt && milestone.pptData && (
-  <div>
-    <ul className="list-disc ml-4">
-      {milestone.pptData.map((slide: any, index: number) => (
-        <li key={index} className="mb-2">
-          <strong>{slide.title}</strong>
-          <ul className="ml-4 list-disc">
-            {slide.bullets.map((bullet: string, idx: number) => {
-              // Check if bullet is an image URL (for IMG 1/IMG 2)
-              const isImgBullet =
-                typeof bullet === "string" &&
-                (bullet.startsWith("IMG 1: http") ||
-                  bullet.startsWith("IMG 2: http"));
-              if (isImgBullet) {
-                // Extract URL after 'IMG 1: ' or 'IMG 2: '
-                const url = bullet.replace(/^IMG [12]:\s*/, "");
-                return (
-                  <li key={idx}>
-                    <img
-                      src={url}
-                      alt={`ppt-img-${idx}`}
-                      style={{
-                        width: 100,
-                        height: 60,
-                        objectFit: "cover",
-                        borderRadius: 4,
-                        marginTop: 4,
-                        marginBottom: 4,
-                      }}
-                      onError={e =>
-                        (e.currentTarget.src =
-                          "https://via.placeholder.com/100x60?text=No+Image")
-                      }
-                    />
-                  </li>
-                );
-              }
-              return <li key={idx}>{bullet}</li>;
-            })}
-          </ul>
-        </li>
-      ))}
-    </ul>
-  </div>
-)}
+            {showPpt && milestone.pptData && (
+              <div>
+                <ul className="list-disc ml-4">
+                  {milestone.pptData.map((slide: any, index: number) => (
+                    <li key={index} className="mb-2">
+                      <strong>{slide.title}</strong>
+                      <ul className="ml-4 list-disc">
+                        {slide.bullets.map((bullet: string, idx: number) => {
+                          // Check if bullet is an image URL (for IMG 1/IMG 2)
+                          const isImgBullet =
+                            typeof bullet === "string" &&
+                            (bullet.startsWith("IMG 1: http") ||
+                              bullet.startsWith("IMG 2: http"));
+                          if (isImgBullet) {
+                            // Extract URL after 'IMG 1: ' or 'IMG 2: '
+                            const url = bullet.replace(/^IMG [12]:\s*/, "");
+                            return (
+                              <li key={idx}>
+                                <img
+                                  src={url}
+                                  alt={`ppt-img-${idx}`}
+                                  style={{
+                                    width: 100,
+                                    height: 60,
+                                    objectFit: "cover",
+                                    borderRadius: 4,
+                                    marginTop: 4,
+                                    marginBottom: 4,
+                                  }}
+                                  onError={(e) =>
+                                    (e.currentTarget.src =
+                                      "https://via.placeholder.com/100x60?text=No+Image")
+                                  }
+                                />
+                              </li>
+                            );
+                          }
+                          return <li key={idx}>{bullet}</li>;
+                        })}
+                      </ul>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </Card>
       )}
