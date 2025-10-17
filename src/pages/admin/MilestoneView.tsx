@@ -1,7 +1,7 @@
 /* eslint-disable prefer-const */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table";
 import api from "@/services/api";
 import { toast } from "react-hot-toast";
+import ImageCropModal from '../../components/ui/ImageCropModal';
 
 const SUMMARY_COLUMNS = ["Type/Disciplin", "Units", "Summary"];
 
@@ -108,28 +109,28 @@ const MilestoneView: React.FC = () => {
     setEditedComments({ [idx]: value });
   };
 
-const handleSaveComment = async (rowIdx: number, value: string) => {
-  setSavingRow(rowIdx);
-  const updatedRows = [...masterSheetRows];
-  updatedRows[rowIdx]["COMMENTS/REMARKS"] = value || "";
-  try {
-    await api.patch(`/api/milestones/${milestoneId}/master-sheet`, {
-      masterSheetData: updatedRows,
-    });
-    setMilestone((prev: any) => ({
-      ...prev,
-      masterSheetData: updatedRows,
-    }));
-    if (value && value.trim().length > 0) {
-      toast.success("Comment Created");
-    } else {
-      toast.success("Comment Removed");
+  const handleSaveComment = async (rowIdx: number, value: string) => {
+    setSavingRow(rowIdx);
+    const updatedRows = [...masterSheetRows];
+    updatedRows[rowIdx]["COMMENTS/REMARKS"] = value || "";
+    try {
+      await api.patch(`/api/milestones/${milestoneId}/master-sheet`, {
+        masterSheetData: updatedRows,
+      });
+      setMilestone((prev: any) => ({
+        ...prev,
+        masterSheetData: updatedRows,
+      }));
+      if (value && value.trim().length > 0) {
+        toast.success("Comment Created");
+      } else {
+        toast.success("Comment Removed");
+      }
+    } catch (e) {
+      toast.error("Failed to save comment");
     }
-  } catch (e) {
-    toast.error("Failed to save comment");
-  }
-  setSavingRow(null);
-};
+    setSavingRow(null);
+  };
 
   const getSummaryRows = (milestone: any) => {
     if (!milestone?.csvSummary?.summaryData) return [];
@@ -154,6 +155,43 @@ const handleSaveComment = async (rowIdx: number, value: string) => {
     (masterSheetPage - 1) * rowsPerPage,
     masterSheetPage * rowsPerPage
   );
+
+  // Use a ref object to store refs for each cell
+  const imageInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
+
+  // Helper to get the ref key for each cell
+  const getRefKey = (rowIdx: number, colIdx: number) => `${rowIdx}-${colIdx}`;
+
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+const [selectedImageSrc, setSelectedImageSrc] = useState<string | null>(null);
+const [pendingUploadInfo, setPendingUploadInfo] = useState<{
+  rowIndex: number;
+  colIdx: number;
+  col: string;
+} | null>(null);
+
+  // CSV Download Utility
+  function downloadCSV(data: any[], filename = "master_sheet.csv") {
+    if (!data || data.length === 0) return;
+    const columns = Object.keys(data[0]);
+    const csvRows = [
+      columns.join(","), // header
+      ...data.map(row =>
+        columns.map(col => `"${(row[col] ?? "").toString().replace(/"/g, '""')}"`).join(",")
+      ),
+    ];
+    const csvContent = csvRows.join("\r\n");
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
 
   return (
     <div className="p-8 max-w-8xl mx-auto">
@@ -275,49 +313,112 @@ const handleSaveComment = async (rowIdx: number, value: string) => {
                           )
                         }
                       >
-                        {masterSheetColumns.map((col) => {
+                        {masterSheetColumns.map((col, colIdx) => {
                           // For IMG 1 and IMG 2 columns, show thumbnail and set cell width
                           if (
-                            (col.toLowerCase() === "img 1" ||
-                              col.toLowerCase() === "img 2") &&
-                            row[col]
-                          ) {
-                            return (
-                              <TableCell
-                                key={col}
-                                style={{
-                                  verticalAlign: "middle",
-                                  minWidth: 240,
-                                  width: 240,
-                                  maxWidth: 240,
-                                }}
-                              >
-                                {row[col] ? (
-                                  <img
-                                    src={row[col]}
-                                    alt={`thumbnail-${col}-${idx}`}
-                                    style={{
-                                      width: 220,
-                                      height: 140,
-                                      objectFit: "cover",
-                                      borderRadius: 4,
-                                      display: "block",
-                                      margin: "0 auto",
-                                    }}
-                                    onError={(e) =>
-                                      (e.currentTarget.src =
-                                        "https://via.placeholder.com/220x140?text=No+Image")
-                                    }
-                                  />
-                                ) : null}
-                              </TableCell>
-                            );
-                          }
-                          // For comments/remarks columns, show editable textarea (auto-save)
-                          if (col.toLowerCase().includes("comment")) {
-                            return (
-                              <TableCell
-                                key={col}
+  col.toLowerCase() === "img 1" ||
+  col.toLowerCase() === "img 2"
+) {
+  const rowIndex = idx;
+  const imageUrl = row[col];
+
+  const handleButtonClick = () => {
+    const refKey = `${rowIndex}-${colIdx}`;
+    imageInputRefs.current[refKey]?.click();
+  };
+
+  const handleImageSelect = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setSelectedImageSrc(ev.target?.result as string);
+      setCropModalOpen(true);
+      setPendingUploadInfo({ rowIndex, colIdx, col });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  return (
+    <TableCell
+      key={col}
+      style={{
+        verticalAlign: "middle",
+        minWidth: 240,
+        width: 240,
+        maxWidth: 240,
+      }}
+    >
+      {imageUrl ? (
+        <img
+          src={
+            imageUrl.startsWith("/uploads/")
+              ? `${import.meta.env.VITE_API_URL || "http://localhost:4000"}${imageUrl}`
+              : imageUrl
+          }
+          alt={`thumbnail-${col}-${idx}`}
+          style={{
+            width: 140,
+            height: 140,
+            objectFit: "cover",
+            borderRadius: 4,
+            display: "block",
+            margin: "0 auto 8px auto",
+            aspectRatio: "1/1",
+          }}
+          onError={(e) =>
+            (e.currentTarget.src =
+              "https://via.placeholder.com/140x140?text=No+Image")
+          }
+        />
+      ) : (
+        <div
+          style={{
+            width: 140,
+            height: 140,
+            background: "#f3f3f3",
+            borderRadius: 4,
+            margin: "0 auto 8px auto",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#888",
+            aspectRatio: "1/1",
+          }}
+        >
+          No Image
+        </div>
+      )}
+      <input
+        ref={el =>
+          (imageInputRefs.current[
+            `${rowIndex}-${colIdx}`
+          ] = el)
+        }
+        type="file"
+        accept="image/*"
+        style={{ display: "none" }}
+        onChange={handleImageSelect}
+      />
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full mt-2"
+        onClick={handleButtonClick}
+      >
+        {imageUrl ? "Change Image" : "Upload Image"}
+      </Button>
+    </TableCell>
+  );
+}
+
+// For comments/remarks columns, show editable textarea (auto-save)
+if (col.toLowerCase().includes("comment")) {
+  return (
+    <TableCell
+      key={col}
                                 style={{ verticalAlign: "middle" }}
                               >
                                 <textarea
@@ -376,6 +477,17 @@ const handleSaveComment = async (rowIdx: number, value: string) => {
                     }
                   >
                     &gt;
+                  </Button>
+                </div>
+                {/* Download CSV Button */}
+                <div className="flex justify-end mt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() =>
+                      downloadCSV(milestone.masterSheetData, "master_sheet.csv")
+                    }
+                  >
+                    Download Master Sheet CSV
                   </Button>
                 </div>
               </div>
