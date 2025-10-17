@@ -108,8 +108,10 @@ export default function ResetPassword() {
         </form>
       )}
       {step === 4 && (
-        <div className="text-green-600">{success}
-        <Button className="bg-blue-600 text-white" onClick={() => navigate("/login")}>Login</Button></div>
+        <div className="text-green-600 flex flex-col items-center">
+          {success}
+          <Button className="bg-black text-white mt-4" onClick={() => navigate("/login")}>Login</Button>
+        </div>
       )}
     </div>
   );
